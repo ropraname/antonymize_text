@@ -1,16 +1,31 @@
+'''This is a module for replacing Russian words in the text with their synonyms'''
 import string
+from random import randint
 import requests as re
 from bs4 import BeautifulSoup
-from random import randint
 
 
 def antonymize_text(text):
-    punctuation_symbols = set(string.punctuation)
-    prepared_text = []
+    '''Function for replacing Russian words in the text with their antonyms'''
     new_text_name = text[:text.find('.')] + '_antonymized.txt'
 
-    with open(text, "r") as text:
-        for line in text:
+    prepared_text = parse_text_to_words(text)
+
+    text_with_replacements = repl_with_antonyms_in_parsed_text(prepared_text)
+
+    collected_text_with_replacements = reassemble_parsed_text(text_with_replacements)
+
+    with open(new_text_name, "w", encoding="utf-8") as text_file:
+        text_file.write(collected_text_with_replacements)
+
+    return collected_text_with_replacements
+
+def parse_text_to_words(text):
+    '''Function for parsing a given text into an array of words and punctuation marks'''
+    prepared_text = []
+    punctuation_symbols = set(string.punctuation)
+    with open(text, "r", encoding="utf-8") as text_file:
+        for line in text_file:
             prepared_line = line.split(' ')
             for word_index, word in enumerate(prepared_line):
                 for letter_index, letter in enumerate(word):
@@ -18,36 +33,39 @@ def antonymize_text(text):
                         prepared_line[word_index] = [word[:letter_index], word[letter_index:]]
             for word in prepared_line:
                 prepared_text.append(word)
+    return prepared_text
 
+def repl_with_antonyms_in_parsed_text(prepared_text):
+    '''Function to replace all matching words of the parsed text with their synonyms'''
     for word_index, word in enumerate(prepared_text):
-        if type(word) == str:
+        if isinstance(word, str):
             try:
                 prepared_text[word_index] = get_antonym_with_random(word)
-            except:
+            except ValueError:
                 continue
         else:
             try:
                 prepared_text[word_index][0] = get_antonym_with_random(word[0])
-            except:
+            except ValueError:
                 continue
+    return prepared_text
 
+def reassemble_parsed_text(parsed_text):
+    '''Function for assembling parsed text into a string'''
+    prepared_text = parsed_text
     for word_index, word in enumerate(prepared_text):
-        if type(word) == list:
+        if isinstance(word, list):
             for word_el_index, word_el in enumerate(word):
                 prepared_text[word_index][word_el_index] = word_el.replace(' ', '')
             prepared_text[word_index] = ''.join(word)
         else:
             prepared_text[word_index] = prepared_text[word_index].replace(' ', '')
-    
     prepared_text = ' '.join(prepared_text)
     prepared_text = prepared_text.replace('\n ', '\n')
-
-    with open(new_text_name, "w") as text:
-        text.write(prepared_text)
-
     return prepared_text
 
 def get_antonym_with_random(word):
+    '''Function to get the antonym for a given word'''
     url = f'https://razbiraem-slovo.ru/antonyms/{word}'
     content = re.get(url)
     soup = BeautifulSoup(content.text, "html.parser")
@@ -58,4 +76,4 @@ def get_antonym_with_random(word):
     return random_antonym
 
 if __name__ == "__main__":
-    antonymize_text("text.txt")
+    print(antonymize_text("text.txt"))
