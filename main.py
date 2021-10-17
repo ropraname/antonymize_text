@@ -1,4 +1,4 @@
-'''This is a module for replacing Russian words in the text with their synonyms'''
+'''This is a module for replacing Russian words in the text with their antonyms'''
 import string
 from random import randint
 import requests as re
@@ -36,7 +36,7 @@ def parse_text_to_words(text):
     return prepared_text
 
 def repl_with_antonyms_in_parsed_text(prepared_text):
-    '''Function to replace all matching words of the parsed text with their synonyms'''
+    '''Function to replace all matching words of the parsed text with their antonyms'''
     for word_index, word in enumerate(prepared_text):
         if isinstance(word, str):
             try:
